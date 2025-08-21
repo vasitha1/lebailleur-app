@@ -1,0 +1,290 @@
+import React from 'react';
+import { CheckCircle, ExternalLink, MessageSquare, Users, Zap, Crown } from 'lucide-react';
+
+const PricingComponent = () => {
+  const pricingPlans = [
+    {
+      name: 'Freemium',
+      price: '0',
+      currency: 'XAF',
+      period: '/month',
+      description: 'Perfect for small landlords getting started',
+      icon: <Zap className="w-8 h-8" />,
+      color: 'from-green-400 to-green-600',
+      popular: false,
+      features: [
+        'Up to 10 tenants',
+        '10 WhatsApp messages/month',
+        'Basic tenant management',
+        'Payment tracking',
+        'Mobile money integration',
+        'WhatsApp notifications',
+        'CSV export',
+        'Basic insights'
+      ],
+      limitations: [
+        'Limited WhatsApp messages',
+        'Basic support only'
+      ]
+    },
+    {
+      name: 'Growth',
+      price: '5,000',
+      currency: 'XAF',
+      period: '/month per tier',
+      description: 'For growing property portfolios',
+      icon: <Users className="w-8 h-8" />,
+      color: 'from-blue-400 to-blue-600',
+      popular: true,
+      features: [
+        'Everything in Freemium',
+        '11-25 tenants (+5,000 XAF)',
+        '26-50 tenants (+5,000 XAF)',
+        '51-75 tenants (+5,000 XAF)',
+        'Unlimited WhatsApp messages',
+        'Advanced insights & analytics',
+        'Priority support',
+        'Custom payment categories',
+        'Bulk operations',
+        'Advanced reporting'
+      ],
+      limitations: []
+    },
+    {
+      name: 'Enterprise',
+      price: '5,000',
+      currency: 'XAF',
+      period: '/month per 50 tenants',
+      description: 'For large property management companies',
+      icon: <Crown className="w-8 h-8" />,
+      color: 'from-purple-400 to-purple-600',
+      popular: false,
+      features: [
+        'Everything in Growth',
+        '75+ tenants (per 50 tenant blocks)',
+        'Unlimited everything',
+        'Dedicated account manager',
+        'Custom integrations',
+        'API access',
+        'Multi-user accounts',
+        'Advanced security',
+        'Custom branding',
+        'Training & onboarding'
+      ],
+      limitations: []
+    }
+  ];
+
+  const calculatePricing = (tenants) => {
+    if (tenants <= 10) return 0;
+    if (tenants <= 25) return 5000;
+    if (tenants <= 50) return 10000;
+    if (tenants <= 75) return 15000;
+    
+    // For 75+ tenants
+    const additionalBlocks = Math.ceil((tenants - 75) / 50);
+    return 15000 + (additionalBlocks * 5000);
+  };
+
+  return (
+    <div className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+      <div className="container mx-auto px-4">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            Simple, Transparent Pricing
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Start free and scale as your property portfolio grows. No hidden fees, no surprises.
+          </p>
+        </div>
+
+        {/* Pricing Calculator */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-16 max-w-2xl mx-auto">
+          <h3 className="text-2xl font-bold text-center mb-6">Calculate Your Cost</h3>
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Number of Tenants
+              </label>
+              <input
+                type="range"
+                min="1"
+                max="200"
+                defaultValue="15"
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                onChange={(e) => {
+                  const tenants = parseInt(e.target.value);
+                  const cost = calculatePricing(tenants);
+                  document.getElementById('tenant-count').textContent = tenants;
+                  document.getElementById('monthly-cost').textContent = cost.toLocaleString();
+                }}
+              />
+              <div className="flex justify-between text-sm text-gray-500 mt-2">
+                <span>1</span>
+                <span>200+</span>
+              </div>
+            </div>
+            <div className="text-center p-6 bg-blue-50 rounded-xl">
+              <div className="text-3xl font-bold text-blue-600 mb-2">
+                <span id="tenant-count">15</span> Tenants
+              </div>
+              <div className="text-4xl font-bold text-gray-900">
+                <span id="monthly-cost">5,000</span> XAF
+              </div>
+              <p className="text-gray-600">per month</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Pricing Plans */}
+        <div className="grid lg:grid-cols-3 gap-8 mb-16">
+          {pricingPlans.map((plan, index) => (
+            <div
+              key={index}
+              className={`relative bg-white rounded-2xl shadow-lg overflow-hidden transform hover:scale-105 transition-all duration-300 ${
+                plan.popular ? 'ring-2 ring-blue-500 shadow-2xl' : ''
+              }`}
+            >
+              {plan.popular && (
+                <div className="absolute top-0 left-0 right-0 bg-blue-500 text-white text-center py-2 text-sm font-semibold">
+                  Most Popular
+                </div>
+              )}
+              
+              <div className={`bg-gradient-to-r ${plan.color} p-8 text-white ${plan.popular ? 'pt-12' : ''}`}>
+                <div className="flex items-center space-x-3 mb-4">
+                  {plan.icon}
+                  <h3 className="text-2xl font-bold">{plan.name}</h3>
+                </div>
+                <div className="mb-4">
+                  <span className="text-4xl font-bold">{plan.price}</span>
+                  <span className="text-lg opacity-80"> {plan.currency}</span>
+                  <span className="text-sm opacity-80">{plan.period}</span>
+                </div>
+                <p className="opacity-90">{plan.description}</p>
+              </div>
+
+              <div className="p-8">
+                <ul className="space-y-3 mb-8">
+                  {plan.features.map((feature, featureIndex) => (
+                    <li key={featureIndex} className="flex items-start space-x-3">
+                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-700">{feature}</span>
+                    </li>
+                  ))}
+                  {plan.limitations.map((limitation, limitIndex) => (
+                    <li key={limitIndex} className="flex items-start space-x-3">
+                      <div className="w-5 h-5 border-2 border-gray-300 rounded-full flex-shrink-0 mt-0.5"></div>
+                      <span className="text-gray-500">{limitation}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-300 ${
+                    plan.popular
+                      ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg'
+                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                  }`}
+                >
+                  {plan.name === 'Freemium' ? 'Start Free' : 'Get Started'}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Pricing Breakdown */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-16">
+          <h3 className="text-2xl font-bold text-center mb-8">Pricing Breakdown</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b-2 border-gray-200">
+                  <th className="pb-4 text-gray-900 font-semibold">Tenant Range</th>
+                  <th className="pb-4 text-gray-900 font-semibold">Monthly Cost</th>
+                  <th className="pb-4 text-gray-900 font-semibold">WhatsApp Messages</th>
+                  <th className="pb-4 text-gray-900 font-semibold">Features</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                <tr>
+                  <td className="py-4 font-medium">1-10 tenants</td>
+                  <td className="py-4 text-green-600 font-bold">FREE</td>
+                  <td className="py-4">10/month</td>
+                  <td className="py-4">Basic features</td>
+                </tr>
+                <tr>
+                  <td className="py-4 font-medium">11-25 tenants</td>
+                  <td className="py-4 font-bold">5,000 XAF</td>
+                  <td className="py-4">Unlimited</td>
+                  <td className="py-4">All features</td>
+                </tr>
+                <tr>
+                  <td className="py-4 font-medium">26-50 tenants</td>
+                  <td className="py-4 font-bold">10,000 XAF</td>
+                  <td className="py-4">Unlimited</td>
+                  <td className="py-4">All features + Priority support</td>
+                </tr>
+                <tr>
+                  <td className="py-4 font-medium">51-75 tenants</td>
+                  <td className="py-4 font-bold">15,000 XAF</td>
+                  <td className="py-4">Unlimited</td>
+                  <td className="py-4">All features + Advanced analytics</td>
+                </tr>
+                <tr>
+                  <td className="py-4 font-medium">75+ tenants</td>
+                  <td className="py-4 font-bold">+5,000 XAF per 50</td>
+                  <td className="py-4">Unlimited</td>
+                  <td className="py-4">Enterprise features</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* FAQ Section */}
+        <div className="text-center">
+          <h3 className="text-2xl font-bold mb-8">Frequently Asked Questions</h3>
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="text-left">
+              <h4 className="font-semibold mb-2">How does the scaling work?</h4>
+              <p className="text-gray-600">You only pay as you grow. Start free with up to 10 tenants, then pay incrementally for each tier you enter.</p>
+            </div>
+            <div className="text-left">
+              <h4 className="font-semibold mb-2">Can I downgrade anytime?</h4>
+              <p className="text-gray-600">Yes, if your tenant count decreases, your billing automatically adjusts to the appropriate tier.</p>
+            </div>
+            <div className="text-left">
+              <h4 className="font-semibold mb-2">What payment methods do you accept?</h4>
+              <p className="text-gray-600">We accept mobile money payments and bank transfers. Same payment methods available to your tenants.</p>
+            </div>
+            <div className="text-left">
+              <h4 className="font-semibold mb-2">Is there a setup fee?</h4>
+              <p className="text-gray-600">No setup fees ever. We believe in transparent pricing with no hidden costs.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="text-center mt-16">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button className="bg-blue-600 text-white px-8 py-4 rounded-xl hover:bg-blue-700 transition-all duration-300 shadow-lg font-semibold">
+              Start Your Free Trial
+            </button>
+            <a
+              href="https://wa.me/+15556311809"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-green-500 text-white px-8 py-4 rounded-xl hover:bg-green-600 transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg"
+            >
+              <MessageSquare className="w-5 h-5" />
+              <span>Get Started on WhatsApp</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
