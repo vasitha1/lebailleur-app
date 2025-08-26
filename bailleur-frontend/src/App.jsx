@@ -6,6 +6,7 @@ import Navigation from './landing-page/components/Navigation';
 import Footer from './landing-page/components/Footer';
 import Login from './auth/Login';
 import Register from './auth/Register';
+import PasswordRecovery from './auth/PasswordRecovery';
 import OwnerPortal from './portals/owner/OwnerPortal';
 import ManagerPortal from './portals/manager/ManagerPortal';
 import TenantPortal from './portals/tenant/TenantPortal';
@@ -33,6 +34,7 @@ const App = () => {
           ))}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/auth/password-recovery" element={<PasswordRecovery />} />
           <Route path="/owner/*" element={<OwnerPortal />} />
           <Route path="/manager/*" element={<ManagerPortal />} />
           <Route path="/tenant/*" element={<TenantPortal />} />

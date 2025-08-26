@@ -1,48 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { DollarSign, Calendar, Filter, AlertCircle, Download, CreditCard } from 'lucide-react';
+import { DollarSign, TrendingUp, Calendar, Filter, AlertCircle, CreditCard } from 'lucide-react';
 import { paymentsAPI } from '../../../lib/api';
-import { formatCurrency, formatDate } from '../../../lib/utils';
+import { formatCurrency } from '../../../lib/utils';
 import Card from '../../../components/ui/Card';
 import Badge from '../../../components/ui/Badge';
-import Button from '../../../components/ui/Button';
+import StatCard from '../../../components/ui/StatCard';
 
-interface Payment {
-  id: string;
-  amount: number;
-  dueDate: string;
-  status: string;
-  paymentDate?: string;
-  receiptUrl?: string;
-}
-
-const TenantPayments = () => {
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
+const OwnerFinancials = () => {
+  const [payments, setPayments] = useState([]);
+  const [stats, setStats] = useState({
+    totalRevenue: 0,
+    pendingPayments: 0,
+    overduePayments: 0,
+    paidThisMonth: 0
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all');
 
-  // Fetch payments when component mounts
+  // Fetch payments and stats when component mounts
   useEffect(() => {
     fetchPayments();
+    fetchStats();
   }, []);
-
-  // Filter payments when filter changes
-  useEffect(() => {
-    if (filter === 'all') {
-      setFilteredPayments(payments);
-    } else {
-      const filtered = payments.filter(payment => payment.status === filter);
-      setFilteredPayments(filtered);
-    }
-  }, [filter, payments]);
 
   const fetchPayments = async () => {
     try {
       setLoading(true);
       const data = await paymentsAPI.getAll();
       setPayments(data);
-      setFilteredPayments(data);
     } catch (err) {
       console.error('Error fetching payments:', err);
       setError('Failed to load payments. Please try again.');
@@ -51,7 +37,16 @@ const TenantPayments = () => {
     }
   };
 
-  const getStatusBadgeVariant = (status: string) => {
+  const fetchStats = async () => {
+    try {
+      const statsData = await paymentsAPI.getStats();
+      setStats(statsData);
+    } catch (err) {
+      console.error('Error fetching payment stats:', err);
+    }
+  };
+
+  const getStatusBadgeVariant = (status) => {
     switch (status) {
       case 'paid': return 'success';
       case 'pending': return 'warning';
@@ -60,17 +55,40 @@ const TenantPayments = () => {
     }
   };
 
-  const handleDownloadReceipt = (receiptUrl: string) => {
-    // In a real app, this would download the receipt
-    console.log('Downloading receipt:', receiptUrl);
-    window.open(receiptUrl, '_blank');
-  };
+  const filteredPayments = filter === 'all' 
+    ? payments 
+    : payments.filter(payment => payment.status === filter);
 
-  const handleMakePayment = (paymentId: string) => {
-    // In a real app, this would initiate the payment process
-    console.log('Making payment for:', paymentId);
-    alert('Payment process would start here');
-  };
+  const statsData = [
+    {
+      title: 'Total Revenue',
+      value: formatCurrency(stats.totalRevenue),
+      icon: DollarSign,
+      color: 'blue',
+      trend: { value: '+12%', isPositive: true }
+    },
+    {
+      title: 'Pending Payments',
+      value: formatCurrency(stats.pendingPayments),
+      icon: Calendar,
+      color: 'yellow',
+      trend: { value: '5', isPositive: false }
+    },
+    {
+      title: 'Overdue Payments',
+      value: formatCurrency(stats.overduePayments),
+      icon: AlertCircle,
+      color: 'red',
+      trend: { value: '2', isPositive: false }
+    },
+    {
+      title: 'Paid This Month',
+      value: formatCurrency(stats.paidThisMonth),
+      icon: TrendingUp,
+      color: 'green',
+      trend: { value: '+8%', isPositive: true }
+    }
+  ];
 
   if (loading) {
     return (
@@ -83,7 +101,7 @@ const TenantPayments = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-        <h1 className="text-2xl font-bold text-gray-900">My Payments</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Financials</h1>
         <div className="flex space-x-3">
           <div className="relative">
             <Filter className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -101,6 +119,13 @@ const TenantPayments = () => {
         </div>
       </div>
 
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {statsData.map((stat, index) => (
+          <StatCard key={index} {...stat} />
+        ))}
+      </div>
+
       {error && (
         <div className="flex items-center space-x-2 p-4 bg-red-50 border border-red-200 rounded-lg">
           <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
@@ -113,7 +138,8 @@ const TenantPayments = () => {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 font-semibold text-gray-900">Period</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-900">Tenant</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-900">Property</th>
                 <th className="text-left py-3 px-4 font-semibold text-gray-900">Amount</th>
                 <th className="text-left py-3 px-4 font-semibold text-gray-900">Due Date</th>
                 <th className="text-left py-3 px-4 font-semibold text-gray-900">Status</th>
@@ -123,7 +149,7 @@ const TenantPayments = () => {
             <tbody>
               {filteredPayments.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-8 text-gray-500">
+                  <td colSpan="6" className="text-center py-8 text-gray-500">
                     <CreditCard className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                     <p>No payments found</p>
                   </td>
@@ -132,15 +158,19 @@ const TenantPayments = () => {
                 filteredPayments.map((payment) => (
                   <tr key={payment.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="py-3 px-4">
-                      <p className="font-medium text-gray-900">
-                        {formatDate(new Date(payment.dueDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }))}
-                      </p>
+                      <div>
+                        <p className="font-medium text-gray-900">{payment.tenant?.name || 'Unknown Tenant'}</p>
+                        <p className="text-sm text-gray-500">{payment.tenant?.whatsappNumber || ''}</p>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <p className="text-gray-900">{payment.property?.name || 'Unknown Property'}</p>
                     </td>
                     <td className="py-3 px-4 font-medium text-gray-900">
                       {formatCurrency(payment.amount)}
                     </td>
                     <td className="py-3 px-4 text-gray-600">
-                      {formatDate(payment.dueDate)}
+                      {new Date(payment.dueDate).toLocaleDateString()}
                     </td>
                     <td className="py-3 px-4">
                       <Badge variant={getStatusBadgeVariant(payment.status)}>
@@ -148,32 +178,9 @@ const TenantPayments = () => {
                       </Badge>
                     </td>
                     <td className="py-3 px-4">
-                      <div className="flex space-x-2">
-                        {payment.status === 'pending' && (
-                          <Button 
-                            size="sm" 
-                            onClick={() => handleMakePayment(payment.id)}
-                            className="flex items-center"
-                          >
-                            <DollarSign className="w-4 h-4 mr-1" />
-                            Pay
-                          </Button>
-                        )}
-                        {payment.status === 'paid' && payment.receiptUrl && (
-                          <Button 
-                            variant="secondary" 
-                            size="sm" 
-                            onClick={() => handleDownloadReceipt(payment.receiptUrl!)}
-                            className="flex items-center"
-                          >
-                            <Download className="w-4 h-4 mr-1" />
-                            Receipt
-                          </Button>
-                        )}
-                        <Button variant="secondary" size="sm">
-                          Details
-                        </Button>
-                      </div>
+                      <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        View Details
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -186,4 +193,4 @@ const TenantPayments = () => {
   );
 };
 
-export default TenantPayments;
+export default OwnerFinancials;

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { User, Phone, Mail, Lock, Building, MapPin, Home, Loader2, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { authAPI } from '../lib/api';
+import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -16,9 +18,6 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
-  // Use the Vite proxy - much cleaner and avoids CORS issues
-  const API_BASE_URL = '/api/v1';
 
   const handleChange = (e) => {
     setFormData({
@@ -77,96 +76,36 @@ const Register = () => {
     setSuccess('');
 
     try {
-      console.log('Submitting registration to:', `${API_BASE_URL}/auth/register`);
-      console.log('Registration data:', {
-        name: formData.name,
-        email: formData.email,
-        whatsappNumber: formData.whatsappNumber
+      const result = await authAPI.register({
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        whatsappNumber: formData.whatsappNumber.replace(/\s/g, ''),
+        password: formData.password,
+        propertyName: formData.propertyName.trim() || null,
+        propertyLocation: formData.propertyLocation.trim() || null,
+        propertyType: formData.propertyType || null,
+        role: 'owner' // Default role for public registration
       });
 
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        credentials: 'include', 
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          email: formData.email.trim().toLowerCase(),
-          whatsappNumber: formData.whatsappNumber.replace(/\s/g, ''),
-          password: formData.password,
-          propertyName: formData.propertyName.trim() || null,
-          propertyLocation: formData.propertyLocation.trim() || null,
-          propertyType: formData.propertyType || null,
-          role: 'owner' // Default role for public registration
-        })
-      });
+      setSuccess('Account created successfully! Welcome to LeBailleur!');
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', [...response.headers.entries()]);
+      // Store token and user data
+      localStorage.setItem('access_token', result.access_token);
+      localStorage.setItem('user', JSON.stringify(result.user));
 
-      let responseData;
-      try {
-        responseData = await response.json();
-        console.log('Registration response:', responseData);
-      } catch (jsonError) {
-        console.error('Failed to parse JSON response:', jsonError);
-        throw new Error('Server returned invalid response');
-      }
-
-      if (response.ok && responseData.access_token) {
-        setSuccess('Account created successfully! Welcome to LeBailleur!');
-
-        try {
-          localStorage.setItem('access_token', responseData.access_token);
-          localStorage.setItem('user', JSON.stringify(responseData.user));
-          console.log('Registration successful - Token stored:', {
-            token: responseData.access_token,
-            user: responseData.user
-          });
-        } catch (storageError) {
-          console.warn('Could not store auth data:', storageError);
-        }
-
-        // Show redirect message and actually redirect
-        setTimeout(() => {
-          setSuccess('Redirecting to dashboard...');
-          
-          // Actual redirect - you can change this URL to match your routing
-          setTimeout(() => {
-
-            window.location.href = '/login';
-            
-          }, 1000);
-        }, 1500);
-      } else {
-        const errorMessage = responseData?.message || responseData?.error || 'Registration failed';
-        
-        if (response.status === 409) {
-          setError('An account with this email or WhatsApp number already exists');
-        } else if (response.status === 400) {
-          setError(Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage);
-        } else if (response.status === 500) {
-          setError('Server error. Please try again later.');
-        } else {
-          setError(errorMessage);
-        }
-      }
-    } catch (error) {
-      console.error('Registration error:', error);
-      
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        setError('Unable to connect to server. Please ensure the backend is running on localhost:3000');
-      } else if (error.message.includes('CORS')) {
-        setError('Connection blocked. Please check CORS configuration.');
-      } else {
-        setError(error.message || 'An unexpected error occurred. Please try again.');
-      }
+      // Redirect to owner dashboard
+      setTimeout(() => {
+        window.location.href = '/owner';
+      }, 2000);
+    } catch (err) {
+      console.error('Registration error:', err);
+      setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  const navigate = useNavigate();
 
   // Handle Enter key press on form fields
   const handleKeyPress = (e) => {
@@ -356,7 +295,7 @@ const Register = () => {
               <p className="text-gray-600">
                 Already have an account?{' '}
                 <button
-                  onClick={() => console.log('Navigate to login')}
+                  onClick={() => navigate('/login')}
                   disabled={isLoading}
                   className="text-blue-600 hover:text-blue-700 font-medium underline disabled:cursor-not-allowed disabled:text-gray-400"
                 >

@@ -5,22 +5,9 @@ import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import Badge from '../../../components/ui/Badge';
 
-interface Tenant {
-  id: string;
-  name: string;
-  email: string;
-  whatsappNumber: string;
-  status: string;
-  unit?: {
-    name: string;
-  };
-  rentAmount?: number;
-  createdAt: string;
-}
-
-const ManagerTenants = () => {
-  const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [filteredTenants, setFilteredTenants] = useState<Tenant[]>([]);
+const OwnerTenants = () => {
+  const [tenants, setTenants] = useState([]);
+  const [filteredTenants, setFilteredTenants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,7 +22,7 @@ const ManagerTenants = () => {
     if (!searchTerm) {
       setFilteredTenants(tenants);
     } else {
-      const filtered = tenants.filter(tenant =>
+      const filtered = tenants.filter(tenant => 
         tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         tenant.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         tenant.whatsappNumber.includes(searchTerm)
@@ -47,7 +34,7 @@ const ManagerTenants = () => {
   const fetchTenants = async () => {
     try {
       setLoading(true);
-      const data = await tenantsAPI.getMyTenants();
+      const data = await tenantsAPI.getAll();
       setTenants(data);
       setFilteredTenants(data);
     } catch (err) {
@@ -58,10 +45,10 @@ const ManagerTenants = () => {
     }
   };
 
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeVariant = (status) => {
     switch (status) {
       case 'active': return 'success';
-      case 'inactive': return 'default';
+      case 'inactive': return 'secondary';
       case 'pending': return 'warning';
       default: return 'default';
     }
@@ -78,7 +65,7 @@ const ManagerTenants = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-        <h1 className="text-2xl font-bold text-gray-900">My Tenants</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Tenants</h1>
         <div className="flex space-x-3 w-full sm:w-auto">
           <div className="relative flex-1 sm:flex-none">
             <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -109,10 +96,10 @@ const ManagerTenants = () => {
           <div className="text-center py-12">
             <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-1">
-              {searchTerm ? 'No tenants found' : 'No tenants assigned'}
+              {searchTerm ? 'No tenants found' : 'No tenants found'}
             </h3>
             <p className="text-gray-500">
-              {searchTerm ? 'Try adjusting your search terms.' : 'You have no tenants assigned to you yet.'}
+              {searchTerm ? 'Try adjusting your search terms.' : 'Get started by adding your first tenant.'}
             </p>
           </div>
         </Card>
@@ -140,7 +127,7 @@ const ManagerTenants = () => {
                 </div>
                 <div className="flex items-center text-gray-600">
                   <MapPin className="w-4 h-4 mr-2" />
-                  <span className="text-sm">{tenant.unit?.name || 'Unassigned'}</span>
+                  <span className="text-sm">{tenant.property?.name || 'Unassigned'}</span>
                 </div>
                 <div className="flex items-center text-gray-600">
                   <CreditCard className="w-4 h-4 mr-2" />
@@ -166,4 +153,4 @@ const ManagerTenants = () => {
   );
 };
 
-export default ManagerTenants;
+export default OwnerTenants;

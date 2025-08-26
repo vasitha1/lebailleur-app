@@ -1,15 +1,17 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
-import { BarChart3, Users, Bell, CheckSquare, Settings, LogOut } from 'lucide-react'
+import { BarChart3, Users, Bell, CheckSquare, Settings, LogOut, CreditCard } from 'lucide-react'
 import Sidebar from '../../components/layout/Sidebar'
 import Header from '../../components/layout/Header'
 import ManagerDashboard from './pages/ManagerDashboard'
 import ManagerTenants from './pages/ManagerTenants'
 import ManagerNotifications from './pages/ManagerNotifications'
+import ManagerPayments from './pages/ManagerPayments'
 
 const navigation = [
   { name: 'Dashboard', href: '', icon: BarChart3 },
   { name: 'Tenants', href: '/tenants', icon: Users },
+  { name: 'Payments', href: '/payments', icon: CreditCard },
   { name: 'Notifications', href: '/notifications', icon: Bell },
   { name: 'Tasks', href: '/tasks', icon: CheckSquare },
   { name: 'Settings', href: '/settings', icon: Settings },
@@ -32,6 +34,7 @@ const ManagerPortal: React.FC = () => {
           <Routes>
             <Route path="" element={<ManagerDashboard />} />
             <Route path="/tenants" element={<ManagerTenants />} />
+            <Route path="/payments" element={<ManagerPayments />} />
             <Route path="/notifications" element={<ManagerNotifications />} />
           </Routes>
         </main>

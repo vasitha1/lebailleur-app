@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Phone, Lock, Home, Eye, EyeOff } from 'lucide-react';
+import { Phone, Lock, Home, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { authAPI } from '../lib/api';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -7,47 +8,64 @@ const Login = () => {
     password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+    // Clear error when user starts typing
+    if (error) setError('');
   };
 
-  const checkIsFirstLoginAfterRegister = () => {
-    // Implement your logic here
-    return false; // placeholder
-  };
-
-  const getInvitationTokenFromStorage = () => {
-    // Implement your logic here
-    return null; // placeholder
-  };
-
-  const getRoleFromInvitationToken = (token) => {
-    // Implement your logic here
-    return 'manager'; // placeholder
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Login submitted:', formData);
     
-    const isFirstLoginAfterRegister = checkIsFirstLoginAfterRegister();
-    const invitationToken = getInvitationTokenFromStorage();
-
-    if (isFirstLoginAfterRegister) {
-      window.location.href = '/owner';
-    } else if (invitationToken) {
-      const role = getRoleFromInvitationToken(invitationToken);
-      if (role === 'manager') {
-        window.location.href = '/manager';
-      } else if (role === 'tenant') {
-        window.location.href = '/tenant';
+    // Basic validation
+    if (!formData.whatsappNumber.trim()) {
+      setError('WhatsApp number is required');
+      return;
+    }
+    
+    if (!formData.password) {
+      setError('Password is required');
+      return;
+    }
+    
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      const result = await authAPI.login({
+        whatsappNumber: formData.whatsappNumber,
+        password: formData.password
+      });
+      
+      // Store token and user data
+      localStorage.setItem('access_token', result.access_token);
+      localStorage.setItem('user', JSON.stringify(result.user));
+      
+      // Redirect based on user role
+      switch (result.user.role) {
+        case 'owner':
+          window.location.href = '/owner';
+          break;
+        case 'manager':
+          window.location.href = '/manager';
+          break;
+        case 'tenant':
+          window.location.href = '/tenant';
+          break;
+        default:
+          window.location.href = '/owner';
       }
-    } else {
-      window.location.href = '/owner';
+    } catch (err) {
+      console.error('Login error:', err);
+      setError(err.message || 'Login failed. Please check your credentials and try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -69,6 +87,14 @@ const Login = () => {
           {/* Login Form */}
           <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
             
+            {/* Error Message */}
+            {error && (
+              <div className="flex items-start space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <span className="text-red-700 text-sm">{error}</span>
+              </div>
+            )}
+            
             <div className="space-y-4">
               {/* WhatsApp Number Input */}
               <div className="relative">
@@ -80,7 +106,8 @@ const Login = () => {
                   value={formData.whatsappNumber}
                   onChange={handleChange}
                   required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all rounded-lg"
+                  disabled={isLoading}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all rounded-lg disabled:bg-gray-100"
                 />
               </div>
 
@@ -94,12 +121,14 @@ const Login = () => {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  disabled={isLoading}
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-100"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  disabled={isLoading}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors disabled:cursor-not-allowed"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -113,7 +142,8 @@ const Login = () => {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  disabled={isLoading}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
                   Remember me
@@ -122,7 +152,9 @@ const Login = () => {
               <div className="text-sm">
                 <button
                   type="button"
-                  className="text-blue-600 hover:text-blue-700 font-medium"
+                  onClick={() => window.location.href = '/auth/password-recovery'}
+                  disabled={isLoading}
+                  className="text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50"
                 >
                   Forgot password?
                 </button>
@@ -132,9 +164,10 @@ const Login = () => {
             {/* Login Button */}
             <button
               onClick={handleSubmit}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-6 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-semibold text-lg shadow-lg transform hover:scale-[1.02]"
+              disabled={isLoading}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-6 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-semibold text-lg shadow-lg transform hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Sign In
+              {isLoading ? 'Signing In...' : 'Sign In'}
             </button>
 
             {/* Divider */}
@@ -150,7 +183,8 @@ const Login = () => {
             {/* WhatsApp Login Option */}
             <button
               type="button"
-              className="w-full bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 transition-all duration-300 font-medium flex items-center justify-center space-x-2"
+              disabled={isLoading}
+              className="w-full bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 transition-all duration-300 font-medium flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Phone className="w-5 h-5" />
               <span>Login via WhatsApp</span>
@@ -162,7 +196,8 @@ const Login = () => {
                 Don't have an account?{' '}
                 <button
                   onClick={() => window.location.href = '/register'}
-                  className="text-blue-600 hover:text-blue-700 font-medium underline"
+                  disabled={isLoading}
+                  className="text-blue-600 hover:text-blue-700 font-medium underline disabled:opacity-50"
                 >
                   Create account
                 </button>
